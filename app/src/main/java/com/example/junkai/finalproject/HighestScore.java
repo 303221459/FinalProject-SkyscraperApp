@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -39,7 +40,7 @@ public class HighestScore extends AppCompatActivity{
     ListView scoreListView;
     public static Button reStartButton,goMenuButton;
     public static final String TxtName = "score.txt";
-    public static ArrayList<Integer> scoreArrayList;
+    public static ArrayList<String> scoreArrayList;
     public static String restartButtonName;
 
     @Override
@@ -87,9 +88,10 @@ public class HighestScore extends AppCompatActivity{
 
         // modify the size of drawable being used
         // and then set the icon on the toolbar(NavigationIcon)
-        Drawable dr = getResources().getDrawable(R.drawable.audioicon);
-        Bitmap bitmap = ((BitmapDrawable) dr).getBitmap();
-        Drawable d = new BitmapDrawable(getResources(),Bitmap.createScaledBitmap(bitmap,100,100,true));
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.audioicon);
+        final Drawable d = new BitmapDrawable(getResources(),Bitmap.createScaledBitmap(bitmap,100,100,true));
+        Bitmap mutedAudioBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.mutedaudioicon);
+        final Drawable mutedAudioDrawable = new BitmapDrawable(getResources(), Bitmap.createScaledBitmap(mutedAudioBitmap, 100, 100, true));
         toolbar.setNavigationIcon(d);
 
         // do something when click the audio play button
@@ -98,8 +100,10 @@ public class HighestScore extends AppCompatActivity{
             @Override
             public void onClick(View v) {
                 if(mediaPlayer.isPlaying()) {
+                    toolbar.setNavigationIcon(mutedAudioDrawable);
                     mediaPlayer.pause();
                 }else{
+                    toolbar.setNavigationIcon(d);
                     mediaPlayer.start();
                 }
             }
@@ -107,7 +111,7 @@ public class HighestScore extends AppCompatActivity{
         getSupportActionBar().setTitle("");
 
         //initialize Arraylist
-        scoreArrayList = new ArrayList<Integer>();
+        scoreArrayList = new ArrayList<String>();
         readFromFile(scoreArrayList,this.getApplicationContext());
 
         //set Text Color of TextView
@@ -121,7 +125,7 @@ public class HighestScore extends AppCompatActivity{
         String[] values = new String[]{"1","2","3","4","5"};
 
         //Define a new Adapter
-        ArrayAdapter<Integer> adapter = new ArrayAdapter<Integer>(this,android.R.layout.simple_list_item_1,scoreArrayList);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,scoreArrayList);
 
         //Assign Adapter to ListView
         scoreListView.setAdapter(adapter);
@@ -194,7 +198,7 @@ public class HighestScore extends AppCompatActivity{
      * meanwhile, sort the scoreArrayList from largest to smallest
      * @param context
      */
-    public static void readFromFile(ArrayList<Integer> sArrayList, Context context){
+    public static void readFromFile(ArrayList<String> sArrayList, Context context){
 
         int i=0;
         try{
@@ -206,7 +210,7 @@ public class HighestScore extends AppCompatActivity{
                 String receivedString = "";
 
                 while((receivedString = bufferedReader.readLine())!=null){
-                    sArrayList.add(i,Integer.parseInt(receivedString));
+                    sArrayList.add(i,receivedString);
                     i++;
                 }
                 inputStream.close();
@@ -218,8 +222,6 @@ public class HighestScore extends AppCompatActivity{
             Log.e("login activity", "Can not read file: " + e.toString());
         }
 
-        //Sort the scoreArrayList
-        Collections.sort(scoreArrayList);
-        Collections.reverse(scoreArrayList);
+
     }
 }

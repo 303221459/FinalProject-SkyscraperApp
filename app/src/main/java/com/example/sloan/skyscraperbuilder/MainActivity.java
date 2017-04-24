@@ -32,6 +32,7 @@ import java.io.LineNumberReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RelativeLayout mainContainer;
     public static int score;
     public boolean fileNotFound;
-    public static ArrayList<Integer> scoreArrayList;
+    public static ArrayList<String> scoreArrayList;
     public static final String TxtName = "score.txt";
     public static Context context;
     private static boolean saveScoreVisible;
@@ -116,10 +117,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //create an arraylist
         //initialize its value with all 0
-        scoreArrayList = new ArrayList<Integer>();
+        scoreArrayList = new ArrayList<String>();
 
         for(int i=0;i<5;i++){
-            scoreArrayList.add(0);
+            scoreArrayList.add("0");
         }
         Log.d("Array List Size", "onCreate: "+scoreArrayList.size());
         //set Context
@@ -211,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //TODO add in capability to write the persons name to the score file with that score
             //JUNKAI CODE
             readFromFile(scoreArrayList,context);
-            writeScoreToFile(scoreArrayList,score,context);
+            writeScoreToFile(scoreArrayList,score,context,saveScoreName);
             saveScoreButton.setVisibility(v.INVISIBLE);
             saveScoreVisible=false;
         }
@@ -234,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * meanwhile, sort the scoreArrayList from largest to smallest
      * @param context
      */
-    public static void readFromFile(ArrayList<Integer> sArrayList, Context context){
+    public static void readFromFile(ArrayList<String> sArrayList, Context context){
 
         int i=0;
         try{
@@ -246,7 +247,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String receivedString = "";
 
                 while((receivedString = bufferedReader.readLine())!=null){
-                    sArrayList.set(i,Integer.parseInt(receivedString));
+                    sArrayList.set(i,receivedString);
+                    Log.d("fileContent", "readFromFile: "+sArrayList.get(i)+"\n");
                     i++;
                 }
                 inputStream.close();
@@ -258,9 +260,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.e("login activity", "Can not read file: " + e.toString());
         }
 
-        //Sort the sArrayList
-        Collections.sort(sArrayList);
-        Collections.reverse(sArrayList);
     }
 
     /**
@@ -269,12 +268,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param score
      * @param context
      */
-    public static void writeScoreToFile(ArrayList<Integer> sArrayList,int score, Context context){
+    public static void writeScoreToFile(ArrayList<String> sArrayList,int score, Context context,String userName){
 
-        if(score>sArrayList.get(4)) {
-            sArrayList.set(4,score);
-            Collections.sort(sArrayList);
-            Collections.reverse(sArrayList);
+        int[] temp = new int[sArrayList.size()];
+        Scanner in = null;
+
+        //get the score part from the txt file
+        for(int i=0;i<sArrayList.size();i++){
+
+            in = new Scanner(sArrayList.get(i)).useDelimiter("[^0-9]+");
+            int integer = in.nextInt();
+            temp[i]=integer;
+            Log.d("array temp[]", "writeScoreToFile: "+temp[i]+"\n");
+            in.close();
+
+        }
+
+        int tempVal=0;
+        String tempString=null;
+        if(score>temp[4]) {
+
+            temp[4]=score;
+            sArrayList.set(4,String.format("%-10s%d",userName,score));
+            for(int j=0;j<sArrayList.size()-1;j++){
+                for(int k=1;k<sArrayList.size()-j;k++){
+                    if(temp[k-1]<temp[k]){
+                        tempVal = temp[k-1];
+                        temp[k-1]=temp[k];
+                        temp[k]=tempVal;
+                        tempString = sArrayList.get(k-1);
+                        sArrayList.set(k-1,sArrayList.get(k));
+                        sArrayList.set(k,tempString);
+                    }
+                }
+            }
+
+
             //print arraylist
             for(int i=0;i<sArrayList.size();i++){
                 Log.d("Arraylistcontent", "writeScoreToFile: "+sArrayList.get(i));
@@ -286,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("score.txt", Context.MODE_PRIVATE));
                 for(int i=0;i<sArrayList.size();i++){
                     //use each line for one score
-                    outputStreamWriter.write(Integer.toString(sArrayList.get(i))+"\n");
+                    outputStreamWriter.write(sArrayList.get(i)+"\n");
                 }
                 outputStreamWriter.close();
 
